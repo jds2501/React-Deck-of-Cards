@@ -50,8 +50,7 @@ function App() {
     setShuffleEnabled(false);
     try {
       const shuffle = `https://deckofcardsapi.com/api/deck/${deckId}/shuffle/`;
-      const shuffleDeck = await fetch(shuffle);
-      const shuffleDeckJSON = await shuffleDeck.json();
+      await fetch(shuffle);
       noMoreCardsRef.current = false;
       setCardImages(cardImages => {
         return [];
