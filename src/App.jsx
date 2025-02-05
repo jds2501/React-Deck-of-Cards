@@ -5,6 +5,7 @@ import Action from './Action';
 function App() {
   const [deckId, setDeckId] = useState(null);
   const [cardImages, setCardImages] = useState([]);
+  const [shuffleEnabled, setShuffleEnabled] = useState(true);
   const noMoreCardsRef = useRef(false);
 
   useEffect(() => {
@@ -27,32 +28,50 @@ function App() {
     if (noMoreCardsRef.current) {
       alert("Error: no cards remaining!");
     } else {
-      const deck = `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`;
-      const drawCardFromDeck = await fetch(deck);
-      const drawCardFromDeckJSON = await drawCardFromDeck.json();
+      try {
+        const deck = `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`;
+        const drawCardFromDeck = await fetch(deck);
+        const drawCardFromDeckJSON = await drawCardFromDeck.json();
 
-      if (drawCardFromDeckJSON["remaining"] === 0) {
-        noMoreCardsRef.current = true;
+        if (drawCardFromDeckJSON["remaining"] === 0) {
+          noMoreCardsRef.current = true;
+        }
+
+        setCardImages(cardImages => {
+          return [...cardImages, drawCardFromDeckJSON["cards"][0]["image"]];
+        })
+      } catch (error) {
+        console.error("Failed to draw card", error);
       }
-
-      setCardImages(cardImages => {
-        return [...cardImages, drawCardFromDeckJSON["cards"][0]["image"]];
-      })
     }
   }
 
   async function shuffleDeck() {
-    console.log("Shuffle!");
+    setShuffleEnabled(false);
+    try {
+      const shuffle = `https://deckofcardsapi.com/api/deck/${deckId}/shuffle/`;
+      const shuffleDeck = await fetch(shuffle);
+      const shuffleDeckJSON = await shuffleDeck.json();
+      noMoreCardsRef.current = false;
+      setCardImages(cardImages => {
+        return [];
+      })
+    } catch (error) {
+      console.error("Failed to shuffle deck", error);
+    }
+
+
+    setShuffleEnabled(true);
   }
 
-  const enabled = deckId !== null;
+  const deckReady = deckId !== null && shuffleEnabled;
 
   return (
     <>
       <div>
         <div className="button-layout">
-          <Action name={"Gimme a card!"} callback={drawCard} enabled={enabled} />
-          <Action name={"Shuffle!"} callback={shuffleDeck} enabled={enabled} />
+          <Action name={"Gimme a card!"} callback={drawCard} enabled={deckReady} />
+          <Action name={"Shuffle!"} callback={shuffleDeck} enabled={deckReady} />
         </div>
         <div className="cards-layout">
           {cardImages.map((cardImage, index) => {
