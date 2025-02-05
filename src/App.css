@@ -1,0 +1,8 @@
+.button-layout {
+    display: flex;
+    justify-content: center;
+}
+
+.cards-layout {
+    margin-top: 20px;
+}
